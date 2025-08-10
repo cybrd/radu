@@ -1,3 +1,4 @@
+import type { LineVector } from "./models";
 import { lerp } from "./utils";
 
 export const Road = (x: number, width: number, laneCount = 3) => {
@@ -13,38 +14,43 @@ export const Road = (x: number, width: number, laneCount = 3) => {
   const bottomLeft = { x: left, y: bottom };
   const bottomRight = { x: right, y: bottom };
 
-  const borders = [
+  const borders: LineVector[] = [
     [topLeft, bottomLeft],
     [topRight, bottomRight],
   ];
 
+  const draw = (ctx: CanvasRenderingContext2D) => {
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "white";
+
+    ctx.setLineDash([20, 20]);
+    for (let i = 1; i < laneCount; i++) {
+      const x = lerp(left, right, i / laneCount);
+
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+    }
+
+    ctx.setLineDash([]);
+    for (const border of borders) {
+      ctx.beginPath();
+      ctx.moveTo(border[0].x, border[0].y);
+      ctx.lineTo(border[1].x, border[1].y);
+      ctx.stroke();
+    }
+  };
+
+  const getLaneCenter = (i: number) => {
+    const laneWidth = width / laneCount;
+
+    return left + laneWidth / 2 + Math.min(i, laneCount - 1) * laneWidth;
+  };
+
   return {
-    draw: (ctx: CanvasRenderingContext2D) => {
-      ctx.lineWidth = 5;
-      ctx.strokeStyle = "white";
-
-      for (const border of borders) {
-        ctx.beginPath();
-        ctx.moveTo(border[0].x, border[0].y);
-        ctx.lineTo(border[1].x, border[1].y);
-        ctx.stroke();
-      }
-
-      for (let i = 1; i < laneCount; i++) {
-        const x = lerp(left, right, i / laneCount);
-
-        ctx.setLineDash([20, 20]);
-
-        ctx.beginPath();
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, bottom);
-        ctx.stroke();
-      }
-    },
-    getLaneCenter: (i: number) => {
-      const laneWidth = width / laneCount;
-
-      return left + laneWidth / 2 + Math.min(i, laneCount - 1) * laneWidth;
-    },
+    draw,
+    getLaneCenter,
+    borders: () => borders,
   };
 };

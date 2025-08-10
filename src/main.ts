@@ -1,5 +1,6 @@
 import { Car } from "./car";
 import { Road } from "./road";
+import { Sensors } from "./sensors";
 
 const main = () => {
   const canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
@@ -17,6 +18,7 @@ const main = () => {
 
   const road = Road(canvas.width / 2, canvas.width * 0.9, 4);
   const car = Car(road.getLaneCenter(0), 100, 30, 50);
+  const sensors = Sensors(car);
 
   const animate = () => {
     canvas.width = canvas.width;
@@ -27,7 +29,10 @@ const main = () => {
     road.draw(ctx);
 
     car.update();
+    sensors.update(road.borders());
+
     car.draw(ctx);
+    sensors.draw(ctx);
 
     ctx.restore();
 
