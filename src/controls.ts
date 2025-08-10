@@ -1,22 +1,19 @@
-export const Controls = () => {
-  let forward = false;
-  let reverse = false;
-  let left = false;
-  let right = false;
+import type { Car } from "./car";
 
+export const Controls = (car: ReturnType<typeof Car>) => {
   document.onkeydown = (event) => {
     switch (event.key) {
       case "w":
-        forward = true;
+        car.setForward(true);
         break;
       case "s":
-        reverse = true;
+        car.setReverse(true);
         break;
       case "a":
-        left = true;
+        car.setLeft(true);
         break;
       case "d":
-        right = true;
+        car.setRight(true);
         break;
     }
   };
@@ -24,24 +21,17 @@ export const Controls = () => {
   document.onkeyup = (event) => {
     switch (event.key) {
       case "w":
-        forward = false;
+        car.setForward(false);
         break;
       case "s":
-        reverse = false;
+        car.setReverse(false);
         break;
       case "a":
-        left = false;
+        car.setLeft(false);
         break;
       case "d":
-        right = false;
+        car.setRight(false);
         break;
     }
-  };
-
-  return {
-    forward: () => forward,
-    reverse: () => reverse,
-    left: () => left,
-    right: () => right,
   };
 };

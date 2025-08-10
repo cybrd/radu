@@ -1,4 +1,4 @@
-import type { LineVector } from "./models";
+import type { LineVector, Vector } from "./models";
 
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -32,4 +32,21 @@ export const getIntersection = (line1: LineVector, line2: LineVector) => {
     y: lerp(y1, y2, ua),
     offset: ua,
   };
+};
+
+export const isPolygonsIntersect = (polygon1: Vector[], polygon2: Vector[]) => {
+  for (let i = 0; i < polygon1.length; i++) {
+    for (let j = 0; j < polygon2.length; j++) {
+      const touch = getIntersection(
+        [polygon1[i], polygon1[(i + 1) % polygon1.length]],
+        [polygon2[j], polygon2[(j + 1) % polygon2.length]]
+      );
+
+      if (touch) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 };

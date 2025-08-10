@@ -1,5 +1,5 @@
 import type { Car } from "./car";
-import type { LineVector, Vector } from "./models";
+import type { LineVector, VectorWithOffset } from "./models";
 import { getIntersection, lerp } from "./utils";
 
 export const Sensors = (car: ReturnType<typeof Car>) => {
@@ -8,7 +8,7 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
   const raySpread = Math.PI / 2;
 
   const rays: LineVector[] = [];
-  const readings: (Vector | false | undefined)[] = [];
+  const readings: (VectorWithOffset | false | undefined)[] = [];
 
   const castRays = () => {
     rays.length = 0;
@@ -27,12 +27,12 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
     }
   };
 
-  const update = (borders: LineVector[]) => {
+  const update = (obstacles: LineVector[]) => {
     castRays();
 
     readings.length = 0;
     for (const ray of rays) {
-      readings.push(getReading(ray, borders));
+      readings.push(getReading(ray, obstacles));
     }
   };
 
@@ -50,18 +50,18 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.strokeStyle = "black";
+      ctx.strokeStyle = "red";
       ctx.moveTo(end.x, end.y);
       ctx.lineTo(rays[i][1].x, rays[i][1].y);
       ctx.stroke();
     }
   };
 
-  const getReading = (ray: LineVector, borders: LineVector[]) => {
-    const touches: Vector[] = [];
+  const getReading = (ray: LineVector, obstacles: LineVector[]) => {
+    const touches: VectorWithOffset[] = [];
 
-    for (const border of borders) {
-      const touch = getIntersection(ray, border);
+    for (const obstacle of obstacles) {
+      const touch = getIntersection(ray, obstacle);
 
       if (touch) {
         touches.push(touch);
@@ -72,7 +72,7 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
       return false;
     }
 
-    const offsets = touches.map((x) => Number(x.offset));
+    const offsets = touches.map((x) => x.offset);
     const nearest = Math.min(...offsets);
 
     return touches.find((x) => x.offset === nearest);

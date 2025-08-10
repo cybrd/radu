@@ -1,4 +1,5 @@
 import { Car } from "./car";
+import { Controls } from "./controls";
 import { Road } from "./road";
 import { Sensors } from "./sensors";
 
@@ -17,21 +18,36 @@ const main = () => {
   }
 
   const road = Road(canvas.width / 2, canvas.width * 0.9, 4);
-  const car = Car(road.getLaneCenter(0), 100, 30, 50);
-  const sensors = Sensors(car);
+
+  const otherCars = [
+    Car(road.getLaneCenter(0), 0, 30, 50, 2),
+    Car(road.getLaneCenter(1), 0, 30, 50, 1.8),
+  ];
+
+  const mainCar = Car(road.getLaneCenter(0), 100, 30, 50);
+  const sensors = Sensors(mainCar);
+  Controls(mainCar);
 
   const animate = () => {
     canvas.width = canvas.width;
 
     ctx.save();
-    ctx.translate(0, -car.y() + canvas.height * 0.7);
+    ctx.translate(0, -mainCar.y() + canvas.height * 0.7);
+
+    const obstacles = [...road.borders()];
 
     road.draw(ctx);
+    for (const car of otherCars) {
+      car.update([...mainCar.polygonToLineVectorArr()]);
+      car.draw(ctx);
 
-    car.update();
-    sensors.update(road.borders());
+      obstacles.push(...car.polygonToLineVectorArr());
+    }
 
-    car.draw(ctx);
+    mainCar.update(obstacles);
+    sensors.update(obstacles);
+
+    mainCar.draw(ctx);
     sensors.draw(ctx);
 
     ctx.restore();
