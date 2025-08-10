@@ -64,6 +64,7 @@ export const Car = (x: number, y: number, width: number, height: number) => {
       x -= Math.sin(angle) * speed;
       y -= Math.cos(angle) * speed;
     },
+    y: () => y,
   };
 };
 
