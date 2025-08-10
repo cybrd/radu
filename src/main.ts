@@ -1,5 +1,9 @@
 import { Car } from "./car";
-import { Controls } from "./controls";
+import {
+  networkFeedForward,
+  NeutralNetwork,
+  randomizeLevel,
+} from "./neural-network";
 import { Road } from "./road";
 import { Sensors } from "./sensors";
 
@@ -10,23 +14,25 @@ const main = () => {
   }
 
   canvas.height = window.innerHeight;
-  canvas.width = 200;
+  canvas.width = 300;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return;
   }
 
-  const road = Road(canvas.width / 2, canvas.width * 0.9, 4);
+  const road = Road(canvas.width / 2, canvas.width * 0.9, 5);
 
   const otherCars = [
     Car(road.getLaneCenter(0), 0, 30, 50, 2),
     Car(road.getLaneCenter(1), 0, 30, 50, 1.8),
   ];
 
-  const mainCar = Car(road.getLaneCenter(0), 100, 30, 50);
+  const mainCar = Car(road.getLaneCenter(2), 100, 30, 50);
   const sensors = Sensors(mainCar);
-  Controls(mainCar);
+
+  const brain = NeutralNetwork([sensors.rayCount, 6, 4]);
+  brain.levels.map(randomizeLevel);
 
   const animate = () => {
     canvas.width = canvas.width;
@@ -44,8 +50,11 @@ const main = () => {
       obstacles.push(...car.polygonToLineVectorArr());
     }
 
-    mainCar.update(obstacles);
-    sensors.update(obstacles);
+    const readings = sensors.update(obstacles);
+    const offsets = readings.map((x) => (x ? 1 - x.offset : 0));
+
+    const outputs = networkFeedForward(offsets, brain);
+    mainCar.update(obstacles, outputs);
 
     mainCar.draw(ctx);
     sensors.draw(ctx);

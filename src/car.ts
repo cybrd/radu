@@ -71,7 +71,7 @@ export const Car = (
 
   let polygon: Vector[] = [];
   let damaged = false;
-  const update = (obstacles: LineVector[]) => {
+  const update = (obstacles: LineVector[], controls: number[] = []) => {
     if (!damaged) {
       polygon = createPolygon();
       checkDamaged(obstacles);
@@ -80,6 +80,13 @@ export const Car = (
 
       polygon = createPolygon();
       checkDamaged(obstacles);
+
+      if (controls.length) {
+        forward = !!controls[0];
+        reverse = !!controls[1];
+        left = !!controls[2];
+        right = !!controls[3];
+      }
     }
   };
 

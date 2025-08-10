@@ -34,6 +34,8 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
     for (const ray of rays) {
       readings.push(getReading(ray, obstacles));
     }
+
+    return readings;
   };
 
   const draw = (ctx: CanvasRenderingContext2D) => {
@@ -81,5 +83,6 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
   return {
     update,
     draw,
+    rayCount,
   };
 };
