@@ -1,5 +1,7 @@
 import { Car } from "./car";
 import {
+  Level,
+  mutateNetwork,
   networkFeedForward,
   NeutralNetwork,
   randomizeLevel,
@@ -7,7 +9,9 @@ import {
 import { Road } from "./road";
 import { Sensors } from "./sensors";
 
-const main = () => {
+let testCount = 0;
+
+const main = (testNumber: number) => {
   const canvas = document.getElementById("myCanvas") as HTMLCanvasElement;
   if (!canvas) {
     return;
@@ -24,14 +28,9 @@ const main = () => {
   const road = Road(canvas.width / 2, canvas.width * 0.9, 5);
 
   const obstacleCars = [
-    Car(road.getLaneCenter(0), 0, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(1), 0, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(1), -300, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(2), -300, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(2), -600, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(3), -600, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(3), -900, 30, 50, Math.random() * 2 + 0.5),
-    Car(road.getLaneCenter(4), -900, 30, 50, Math.random() * 2 + 0.5),
+    Car(road.getLaneCenter(2), -500, 30, 50, 1.5),
+    Car(road.getLaneCenter(3), -1000, 30, 50, 1.5),
+    Car(road.getLaneCenter(4), -1500, 30, 50, 1.5),
   ];
 
   type MainCar = {
@@ -40,8 +39,8 @@ const main = () => {
     brain: ReturnType<typeof NeutralNetwork>;
   };
   const mainCars: MainCar[] = [];
-  const totalCars = 100;
-  for (let i = 0; i < totalCars; i++) {
+  const randomCars = 100;
+  for (let i = 0; i < randomCars; i++) {
     const car = Car(road.getLaneCenter(2), 100, 30, 50);
     const sensors = Sensors(car);
     const brain = NeutralNetwork([sensors.rayCount, 6, 4]);
@@ -53,6 +52,56 @@ const main = () => {
       brain,
     });
   }
+
+  const storage = localStorage.getItem("brain");
+  if (storage) {
+    const load = JSON.parse(storage) as ReturnType<typeof Level>[][];
+
+    for (let i = 0; i < 20; i++) {
+      const car = Car(road.getLaneCenter(2), 100, 30, 50);
+      const sensors = Sensors(car);
+      const brain = NeutralNetwork([sensors.rayCount, 6, 4]);
+      brain.levels = load[i];
+
+      mainCars.push({
+        car,
+        sensors,
+        brain,
+      });
+
+      for (let j = 0; j < 10; j++) {
+        const car = Car(road.getLaneCenter(2), 100, 30, 50);
+        const sensors = Sensors(car);
+        const brain = NeutralNetwork([sensors.rayCount, 6, 4]);
+        brain.levels = load[i];
+        mutateNetwork(brain);
+
+        mainCars.push({
+          car,
+          sensors,
+          brain,
+        });
+      }
+    }
+
+    console.log("loaded");
+  }
+
+  document.getElementById("save")?.addEventListener("click", () => {
+    const sorted = mainCars.sort((a, b) => a.car.y() - b.car.y());
+
+    const save = [];
+    for (let i = 0; i < 20; i++) {
+      save.push(sorted[i].brain.levels);
+    }
+
+    console.log("saved");
+  });
+
+  document.getElementById("discard")?.addEventListener("click", () => {
+    localStorage.removeItem("brain");
+    console.log("discarded");
+  });
 
   const animate = () => {
     canvas.width = canvas.width;
@@ -70,16 +119,16 @@ const main = () => {
     if (furthest < furthestObstacleCar) {
       console.log("obstacleCar created");
 
-      const howMany = Math.round(Math.random() * 5 - 1);
+      const howMany = Math.round(Math.random() * 2 + 2);
       for (let i = 0; i < howMany; i++) {
-        const where = Math.round(Math.random() * 5 - 1);
+        const where = Math.round(Math.random() * 5);
         obstacleCars.push(
           Car(
             road.getLaneCenter(where),
-            furthestObstacleCar - 1000,
+            furthestObstacleCar - 500,
             30,
             50,
-            Math.random() * 2 + 0.5
+            Math.random() * 1.5 + 0.5
           )
         );
       }
@@ -91,30 +140,41 @@ const main = () => {
       obstacleCars[i].draw(ctx);
 
       obstacles.push(...obstacleCars[i].polygonToLineVectorArr());
+    }
 
-      if (furthest < obstacleCars[i].y() - 500) {
-        console.log("obstacleCar deleted");
-        obstacleCars.splice(i, 1);
+    for (let i = 0; i < mainCars.length; i++) {
+      const readings = mainCars[i].sensors.update(obstacles);
+
+      if (readings) {
+        const offsets = readings.map((x) => (x ? 1 - x.offset : 0));
+
+        const outputs = networkFeedForward(offsets, mainCars[i].brain);
+        mainCars[i].car.update(obstacles, outputs);
+
+        if (bestCarIndex === i) {
+          mainCars[i].sensors.draw(ctx);
+        }
+      }
+
+      if (bestCarIndex !== i) {
+        mainCars[i].car.draw(ctx, false);
       }
     }
-
-    for (let i = 0; i < totalCars; i++) {
-      const readings = mainCars[i].sensors.update(obstacles);
-      const offsets = readings.map((x) => (x ? 1 - x.offset : 0));
-
-      const outputs = networkFeedForward(offsets, mainCars[i].brain);
-      mainCars[i].car.update(obstacles, outputs);
-
-      mainCars[i].car.draw(ctx);
-      mainCars[i].sensors.draw(ctx);
-    }
+    mainCars[bestCarIndex].car.draw(ctx, true);
 
     ctx.restore();
 
-    requestAnimationFrame(animate);
+    if (testCount === testNumber) {
+      requestAnimationFrame(animate);
+    }
   };
 
   animate();
 };
 
-main();
+document.getElementById("restart")?.addEventListener("click", () => {
+  testCount++;
+  main(testCount);
+});
+
+main(testCount);

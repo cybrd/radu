@@ -95,14 +95,18 @@ export const Car = (
     }
   };
 
-  const draw = (ctx: CanvasRenderingContext2D) => {
+  const draw = (ctx: CanvasRenderingContext2D, isBestCar = false) => {
     if (damaged) {
-      ctx.fillStyle = "gray";
+      ctx.fillStyle = "darkgray";
     } else {
       if (defaultSpeed) {
         ctx.fillStyle = "blue";
       } else {
-        ctx.fillStyle = "black";
+        if (isBestCar) {
+          ctx.fillStyle = "black";
+        } else {
+          ctx.fillStyle = "gray";
+        }
       }
     }
     ctx.beginPath();
@@ -180,5 +184,6 @@ export const Car = (
       right = x;
     },
     polygonToLineVectorArr,
+    damaged: () => damaged,
   };
 };

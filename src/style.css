@@ -1,11 +1,17 @@
 body {
     background-color: darkgray;
     margin: 0;
-    text-align: center;
     overflow: hidden;
-
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
 #myCanvas {
     background-color: lightgray;
+}
+
+#verticalButtons{
+    display:flex;
+    flex-direction:column;
 }

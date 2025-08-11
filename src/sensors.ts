@@ -28,6 +28,10 @@ export const Sensors = (car: ReturnType<typeof Car>) => {
   };
 
   const update = (obstacles: LineVector[]) => {
+    if (car.damaged()) {
+      return false;
+    }
+
     castRays();
 
     readings.length = 0;
