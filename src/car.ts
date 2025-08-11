@@ -73,9 +73,6 @@ export const Car = (
   let damaged = false;
   const update = (obstacles: LineVector[], controls: number[] = []) => {
     if (!damaged) {
-      polygon = createPolygon();
-      checkDamaged(obstacles);
-
       move();
 
       polygon = createPolygon();
@@ -102,7 +99,11 @@ export const Car = (
     if (damaged) {
       ctx.fillStyle = "gray";
     } else {
-      ctx.fillStyle = "black";
+      if (defaultSpeed) {
+        ctx.fillStyle = "blue";
+      } else {
+        ctx.fillStyle = "black";
+      }
     }
     ctx.beginPath();
 

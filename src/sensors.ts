@@ -4,7 +4,7 @@ import { getIntersection, lerp } from "./utils";
 
 export const Sensors = (car: ReturnType<typeof Car>) => {
   const rayCount = 5;
-  const rayLength = 100;
+  const rayLength = 180;
   const raySpread = Math.PI / 2;
 
   const rays: LineVector[] = [];
